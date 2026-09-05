@@ -1,6 +1,6 @@
-import streamlit as st
-import requests
 import plotly.express as px
+import requests
+import streamlit as st
 
 
 def get_python_repos():
@@ -23,22 +23,34 @@ with tab1:
 with tab2:
     st.header("Top 10 Python Repositories by Stars")
     if st.button("Fetch Data"):
-        r = get_python_repos()
-        # Convert the JSON response into a Python dict.
-        response_dict = r.json()
-        # Store the list of repo dictionaries.
-        repo_dicts = response_dict["items"][:10]
+        with st.spinner("Fetching data from GitHub..."):
+            try:
+                r = get_python_repos()
 
-        # Prepare information for plot.
-        names = [repo["name"] for repo in repo_dicts]
-        stars = [repo["stargazers_count"] for repo in repo_dicts]
+                if r.status_code == 403:
+                    st.error("GitHub API rate limit exceeded. Please try again later.")
+                elif r.status_code != 200:
+                    st.error(
+                        f"GitHub API returned an error (status code {r.status_code})."
+                    )
+                else:
+                    # Convert the JSON response into a Python dict.
+                    response_dict = r.json()
+                    # Store the list of repo dictionaries.
+                    repo_dicts = response_dict["items"][:10]
 
-        fig = px.bar(
-            x=names,
-            y=stars,
-            labels={"x": "Repository", "y": "Stars"},
-            title="Most-Starred Python Projects on GitHub",
-        )
+                    # Prepare information for plot.
+                    names = [repo["name"] for repo in repo_dicts]
+                    stars = [repo["stargazers_count"] for repo in repo_dicts]
 
-        # Embeded the plot into page.
-        st.plotly_chart(fig)
+                    fig = px.bar(
+                        x=names,
+                        y=stars,
+                        labels={"x": "Repository", "y": "Stars"},
+                        title="Most-Starred Python Projects on GitHub",
+                    )
+
+                    # Embeded the plot into page.
+                    st.plotly_chart(fig)
+            except requests.exceptions.RequestException as e:
+                st.error(f"Network error: could not reach GitHub. ({e})")
