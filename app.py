@@ -42,6 +42,7 @@ def render_language_tab(language, display_name):
                     stars = [repo["stargazers_count"] for repo in repo_dicts]
                     descriptions = [repo["description"] for repo in repo_dicts]
                     links = [repo["html_url"] for repo in repo_dicts]
+                    desc_texts = [d if d else "No description" for d in descriptions]
 
                     fig = px.bar(
                         x=names,
@@ -51,7 +52,7 @@ def render_language_tab(language, display_name):
                     )
 
                     fig.update_traces(
-                        customdata=[d if d else "No description" for d in descriptions],
+                        customdata=desc_texts,
                         hovertemplate="<b>%{x}</b><br>Stars: %{y}<br>%{customdata}<extra></extra>",
                     )
 
@@ -61,8 +62,10 @@ def render_language_tab(language, display_name):
                     # Show a list of clickable links below the chart.
                     st.subheader("Repository Links")
                     for name, desc, link in zip(names, descriptions, links):
-                        desc_text = desc if desc else "No description"
-                        st.markdown(f"**[{name}]({link})** - {desc_text}")
+                        st.markdown(f"**[{name}]({link})** - {desc}")
+
+            except requests.exceptions.Timeout:
+                st.error("The request took too long. Please try again.")
 
             except requests.exceptions.RequestException as e:
                 st.error(f"Network error: could not reach GitHub. ({e})")
@@ -70,7 +73,9 @@ def render_language_tab(language, display_name):
 
 st.title("GitHub Explorer")
 
-tab1, tab2, tab3, tab4 = st.tabs(["🔍 Repo Lookup", "🏆 Python", "☕ Java", "🐹 Go"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(
+    ["🔍 Repo Lookup", "🏆 Python", "☕ Java", "🐹 Go", "🔧 C"]
+)
 
 with tab1:
     st.header("Repository Search")
@@ -117,3 +122,6 @@ with tab3:
 
 with tab4:
     render_language_tab("go", "Go")
+
+with tab5:
+    render_language_tab("c", "C")
