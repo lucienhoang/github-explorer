@@ -3,10 +3,10 @@ import requests
 import streamlit as st
 
 
-def get_python_repos():
-    """Get repositories from GitHub API."""
-    url = "https://api.github.com/search/repositories?q=language:python&sort=stars"
-    r = requests.get(url)
+def get_repos_by_language(language):
+    """Get top repositories for a given language from GitHub API."""
+    url = f"https://api.github.com/search/repositories?q=language:{language}&sort=stars"
+    r = requests.get(url, timeout=10)
     return r
 
 
@@ -17,9 +17,60 @@ def get_single_repo(repo_name):
     return r
 
 
+def render_language_tab(language, display_name):
+    """Render a tab showing top 10 repos for a given language."""
+    st.header(f"Top 10 {display_name} Repositories by Stars")
+    if st.button("Fetch Data", key=f"fetch_{language}"):
+        with st.spinner("Fetching data from GitHub..."):
+            try:
+                r = get_repos_by_language(language)
+
+                if r.status_code == 403:
+                    st.error("GitHub API rate limit exceeded. Please try again later.")
+                elif r.status_code != 200:
+                    st.error(
+                        f"GitHub API returned an error (status code {r.status_code})."
+                    )
+                else:
+                    # Convert the JSON response into a Python dict.
+                    response_dict = r.json()
+                    # Store the list of repo dictionaries.
+                    repo_dicts = response_dict["items"][:10]
+
+                    # Prepare information for plot.
+                    names = [repo["name"] for repo in repo_dicts]
+                    stars = [repo["stargazers_count"] for repo in repo_dicts]
+                    descriptions = [repo["description"] for repo in repo_dicts]
+                    links = [repo["html_url"] for repo in repo_dicts]
+
+                    fig = px.bar(
+                        x=names,
+                        y=stars,
+                        labels={"x": "Repository", "y": "Stars"},
+                        title=f"Most-Starred {display_name} Projects on GitHub",
+                    )
+
+                    fig.update_traces(
+                        customdata=[d if d else "No description" for d in descriptions],
+                        hovertemplate="<b>%{x}</b><br>Stars: %{y}<br>%{customdata}<extra></extra>",
+                    )
+
+                    # Embeded the plot into page.
+                    st.plotly_chart(fig)
+
+                    # Show a list of clickable links below the chart.
+                    st.subheader("Repository Links")
+                    for name, desc, link in zip(names, descriptions, links):
+                        desc_text = desc if desc else "No description"
+                        st.markdown(f"**[{name}]({link})** - {desc_text}")
+
+            except requests.exceptions.RequestException as e:
+                st.error(f"Network error: could not reach GitHub. ({e})")
+
+
 st.title("GitHub Explorer")
 
-tab1, tab2 = st.tabs(["🔍 Repo Lookup", "🏆 Top 10 Python Repos"])
+tab1, tab2, tab3, tab4 = st.tabs(["🔍 Repo Lookup", "🏆 Python", "☕ Java", "🐹 Go"])
 
 with tab1:
     st.header("Repository Search")
@@ -59,50 +110,10 @@ with tab1:
                 st.error(f"Network error: could not reach GitHub. ({e})")
 
 with tab2:
-    st.header("Top 10 Python Repositories by Stars")
-    if st.button("Fetch Data"):
-        with st.spinner("Fetching data from GitHub..."):
-            try:
-                r = get_python_repos()
+    render_language_tab("python", "Python")
 
-                if r.status_code == 403:
-                    st.error("GitHub API rate limit exceeded. Please try again later.")
-                elif r.status_code != 200:
-                    st.error(
-                        f"GitHub API returned an error (status code {r.status_code})."
-                    )
-                else:
-                    # Convert the JSON response into a Python dict.
-                    response_dict = r.json()
-                    # Store the list of repo dictionaries.
-                    repo_dicts = response_dict["items"][:10]
+with tab3:
+    render_language_tab("java", "Java")
 
-                    # Prepare information for plot.
-                    names = [repo["name"] for repo in repo_dicts]
-                    stars = [repo["stargazers_count"] for repo in repo_dicts]
-                    descriptions = [repo["description"] for repo in repo_dicts]
-                    links = [repo["html_url"] for repo in repo_dicts]
-
-                    fig = px.bar(
-                        x=names,
-                        y=stars,
-                        labels={"x": "Repository", "y": "Stars"},
-                        title="Most-Starred Python Projects on GitHub",
-                    )
-
-                    fig.update_traces(
-                        customdata=[d if d else "No description" for d in descriptions],
-                        hovertemplate="<b>%{x}</b><br>Stars: %{y}<br>%{customdata}<extra></extra>",
-                    )
-
-                    # Embeded the plot into page.
-                    st.plotly_chart(fig)
-
-                    # Show a list of clickable links below the chart.
-                    st.subheader("Repository Links")
-                    for name, desc, link in zip(names, descriptions, links):
-                        desc_text = desc if desc else "No description"
-                        st.markdown(f"**[{name}]({link})** - {desc_text}")
-
-            except requests.exceptions.RequestException as e:
-                st.error(f"Network error: could not reach GitHub. ({e})")
+with tab4:
+    render_language_tab("go", "Go")
