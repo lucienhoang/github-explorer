@@ -10,6 +10,13 @@ def get_python_repos():
     return r
 
 
+def get_single_repo(repo_name):
+    """Get a single repository's info from GitHub API."""
+    url = f"https://api.github.com/repos/{repo_name}"
+    r = requests.get(url, timeout=10)
+    return r
+
+
 st.title("GitHub Explorer")
 
 tab1, tab2 = st.tabs(["🔍 Repo Lookup", "🏆 Top 10 Python Repos"])
@@ -17,8 +24,39 @@ tab1, tab2 = st.tabs(["🔍 Repo Lookup", "🏆 Top 10 Python Repos"])
 with tab1:
     st.header("Repository Search")
     repo_name = st.text_input("Enter a repo name (e.g., pytorch/pytorch)")
+
     if repo_name:
-        st.write(f"You entered: {repo_name}")
+        with st.spinner("Fetching data from GitHub..."):
+            try:
+                r = get_single_repo(repo_name)
+
+                if r.status_code == 404:
+                    st.error(
+                        f"Repository '{repo_name}' not found. Check the spelling (e.g., owner/repo)."
+                    )
+                elif r.status_code == 403:
+                    st.error("GitHub API rate limit exceeded. Please try again later.")
+                elif r.status_code != 200:
+                    st.error(
+                        f"GitHub API returned an error (status code {r.status_code})."
+                    )
+                else:
+                    repo = r.json()
+                    st.subheader(repo["full_name"])
+                    st.write(repo["description"])
+
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("⭐ Stars", repo["stargazers_count"])
+                    col2.metric("🍴 Forks", repo["forks_count"])
+                    col3.metric("🐛 Open Issues", repo["open_issues_count"])
+
+                    st.write(f"**Language:** {repo['language']}")
+                    st.write(f"[View on GitHub]({repo['html_url']})")
+
+            except requests.exceptions.Timeout:
+                st.error("The request took too long. Please try again.")
+            except requests.exceptions.RequestException as e:
+                st.error(f"Network error: could not reach GitHub. ({e})")
 
 with tab2:
     st.header("Top 10 Python Repositories by Stars")
