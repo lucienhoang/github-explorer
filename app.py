@@ -80,6 +80,8 @@ with tab2:
                     # Prepare information for plot.
                     names = [repo["name"] for repo in repo_dicts]
                     stars = [repo["stargazers_count"] for repo in repo_dicts]
+                    descriptions = [repo["description"] for repo in repo_dicts]
+                    links = [repo["html_url"] for repo in repo_dicts]
 
                     fig = px.bar(
                         x=names,
@@ -88,7 +90,19 @@ with tab2:
                         title="Most-Starred Python Projects on GitHub",
                     )
 
+                    fig.update_traces(
+                        customdata=[d if d else "No description" for d in descriptions],
+                        hovertemplate="<b>%{x}</b><br>Stars: %{y}<br>%{customdata}<extra></extra>",
+                    )
+
                     # Embeded the plot into page.
                     st.plotly_chart(fig)
+
+                    # Show a list of clickable links below the chart.
+                    st.subheader("Repository Links")
+                    for name, desc, link in zip(names, descriptions, links):
+                        desc_text = desc if desc else "No description"
+                        st.markdown(f"**[{name}]({link})** - {desc_text}")
+
             except requests.exceptions.RequestException as e:
                 st.error(f"Network error: could not reach GitHub. ({e})")
