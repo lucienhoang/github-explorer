@@ -73,6 +73,11 @@ def render_language_tab(language, display_name):
 
 st.title("GitHub Explorer")
 
+st.caption(
+    "👋Built by **Luci** "
+    " [View source on GitHub](https://github.com/lucienhoang/github-explorer)"
+)
+
 tab1, tab2, tab3, tab4, tab5 = st.tabs(
     ["🔍 Repo Lookup", "🏆 Python", "☕ Java", "🐹 Go", "🔧 C"]
 )
