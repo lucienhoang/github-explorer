@@ -17,7 +17,7 @@ Built as a portfolio project extending Chapter 17 (_Working with APIs_) of **Pyt
 
 ## Sample Output
 
-![Gameplay](files/sample.gif)
+![Sample Output](files/sample.gif)
 
 ```
 Top 10 Python Repositories by Stars
