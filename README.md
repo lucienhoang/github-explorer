@@ -19,12 +19,6 @@ Built as a portfolio project extending Chapter 17 (_Working with APIs_) of **Pyt
 
 ![Sample Output](files/sample.gif)
 
-```
-Top 10 Python Repositories by Stars
-[bar chart: repo names on x-axis, star counts on y-axis]
-Hovering a bar shows: <repo name> | Stars: <count> | <description>
-```
-
 ## Libraries & Files
 
 | File               | Purpose                                                 |
