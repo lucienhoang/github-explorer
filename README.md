@@ -2,7 +2,7 @@
 
 A Streamlit web app for exploring GitHub repositories — look up any repo by name, or browse the top 10 most-starred repositories across Python, Java, Go, and C.
 
-Built as a portfolio project extending Chapter 17 (_Working with APIs_) of **Python Crash Course** — turned from a terminal script that generated a static SVG chart into a deployed, interactive web app.
+Extends Chapter 17 (Working with APIs) of Python Crash Course — turned from a terminal script that generated a static SVG chart into a deployed, interactive web app.
 
 🔗 **Live demo:** [https://app-explorer-scmyemushvdarbh7x5mz5f.streamlit.app]
 
